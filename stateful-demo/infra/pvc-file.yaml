@@ -1,0 +1,14 @@
+# Self-service PVC from file StorageClass (CSI file backend).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-file-pvc
+  namespace: ryan-demo
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nutanix-files
+  resources:
+    requests:
+      storage: 1Gi
+  volumeMode: Filesystem
