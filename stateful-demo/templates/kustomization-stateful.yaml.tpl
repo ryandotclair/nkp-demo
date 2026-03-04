@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: __NAMESPACE__
 resources:
   - namespace.yaml
+  - middleware-redirect-https.yaml
   - pvc-block.yaml
   - pvc-file.yaml
   - deployment.yaml

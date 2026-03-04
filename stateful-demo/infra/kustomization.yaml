@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: ryan-demo
 resources:
   - namespace.yaml
+  - middleware-redirect-https.yaml
   - pvc-block.yaml
   - pvc-file.yaml
   - deployment.yaml

@@ -123,7 +123,7 @@ HTML_TEMPLATE = """
       <div class="content">{% if fileContent %}{{ fileContent }}{% else %}(none yet){% endif %}</div>
     </div>
   </div>
-  <p class="sub" style="margin-top: 1.5rem;">To see backend mapping: <code>kubectl describe pvc -n ryan-demo</code> and check VolumeHandle / provisioner.</p>
+  <p class="sub" style="margin-top: 1.5rem;">To see backend mapping: <code>kubectl describe pvc -n ryan-demo</code> and compare pvc IDs to Prism Central.</p>
 </body>
 </html>
 """

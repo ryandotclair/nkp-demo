@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: __NAMESPACE__
 resources:
   - namespace.yaml
+  - middleware-redirect-https.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

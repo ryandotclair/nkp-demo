@@ -57,6 +57,7 @@ mkdir -p "$INFRA_DIR"
 if [ "$MODE" = "stateless" ]; then
   echo "Generating infra/ (stateless — app only, emptyDir, no PVCs)..."
   GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"             "$INFRA_DIR/namespace.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/middleware-redirect-https.yaml.tpl" "$INFRA_DIR/middleware-redirect-https.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/deployment-step1.yaml.tpl"      "$INFRA_DIR/deployment.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"               "$INFRA_DIR/service.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"               "$INFRA_DIR/ingress.yaml"
@@ -66,6 +67,7 @@ if [ "$MODE" = "stateless" ]; then
 else
   echo "Generating infra/ (stateful — app + PVCs)..."
   GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"             "$INFRA_DIR/namespace.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/middleware-redirect-https.yaml.tpl" "$INFRA_DIR/middleware-redirect-https.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/pvc-block.yaml.tpl"            "$INFRA_DIR/pvc-block.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/pvc-file.yaml.tpl"             "$INFRA_DIR/pvc-file.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/deployment.yaml.tpl"           "$INFRA_DIR/deployment.yaml"
