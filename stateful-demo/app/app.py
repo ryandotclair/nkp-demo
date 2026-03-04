@@ -2,9 +2,10 @@
 CSI Demo App: writes/reads from two PVCs (block-backed and file-backed).
 Serves a simple page to save and list content on each volume.
 """
+import os
 import sys
 from pathlib import Path
-from flask import Flask, request, render_template_string
+from flask import Flask, make_response, request, render_template_string
 
 BLOCK_PATH = Path("/data/block")
 FILE_PATH = Path("/data/file")
@@ -52,15 +53,23 @@ def Index():
 
     blockExists = (BLOCK_PATH / DEMO_FILENAME).exists()
     fileExists = (FILE_PATH / DEMO_FILENAME).exists()
+    podName = os.environ.get("HOSTNAME", "unknown")
 
-    return render_template_string(HTML_TEMPLATE,
+    response = render_template_string(HTML_TEMPLATE,
         blockContent=blockContent,
         fileContent=fileContent,
         blockExists=blockExists,
         fileExists=fileExists,
         blockPath=str(BLOCK_PATH),
         filePath=str(FILE_PATH),
+        podName=podName,
     )
+    # Prevent caching so demo always shows live data after pod delete
+    resp = make_response(response)
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 
 HTML_TEMPLATE = """
@@ -91,7 +100,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
   <h1>CSI Demo — Block & File Storage</h1>
-  <p class="sub">Same app, two PVCs: one backed by block CSI, one by file CSI. Data persists across pod restarts.</p>
+  <p class="sub">Same app, two PVCs: one backed by block CSI, one by file CSI. Data persists across pod restarts. <strong>Pod: {{ podName }}</strong> (changes after pod delete if stateless)</p>
   <div class="grid">
     <div class="card">
       <h2>Block storage (PVC)</h2>
