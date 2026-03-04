@@ -26,7 +26,11 @@ NAMESPACE="$2"
 # Convert 10.8.53.16 -> 10-8-53-16 (accept either form)
 IP_DASHED="${IP//./-}"
 REGISTRY_HOST="nkp-${IP_DASHED}.sslip.nutanixdemo.com:5000"
-REGISTRY_IMAGE="${REGISTRY_HOST}/library/csi-demo-app:latest"
+if [ "$MODE" = "stateless" ]; then
+  REGISTRY_IMAGE="${REGISTRY_HOST}/library/csi-demo-app:stateless"
+else
+  REGISTRY_IMAGE="${REGISTRY_HOST}/library/csi-demo-app:latest"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -85,9 +89,13 @@ echo "Log in to the registry when prompted."
 docker login "$REGISTRY_HOST"
 echo ""
 
-# Build for linux/amd64 so the image runs on typical cluster nodes (avoids exec format error on arm64 Macs)
-echo "Building image (linux/amd64)..."
-docker build --platform linux/amd64 -t "$REGISTRY_IMAGE" -f "$SCRIPT_DIR/app/Dockerfile" "$SCRIPT_DIR/app"
+# Build for linux/amd64; stateless uses app-stateless.py, stateful uses app.py
+echo "Building image (linux/amd64) — $MODE..."
+if [ "$MODE" = "stateless" ]; then
+  docker build --platform linux/amd64 -t "$REGISTRY_IMAGE" -f "$SCRIPT_DIR/app/Dockerfile.stateless" "$SCRIPT_DIR/app"
+else
+  docker build --platform linux/amd64 -t "$REGISTRY_IMAGE" -f "$SCRIPT_DIR/app/Dockerfile" "$SCRIPT_DIR/app"
+fi
 echo ""
 
 echo "Pushing image..."
