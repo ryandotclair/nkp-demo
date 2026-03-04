@@ -2,6 +2,7 @@
 CSI Demo App: writes/reads from two PVCs (block-backed and file-backed).
 Serves a simple page to save and list content on each volume.
 """
+import sys
 from pathlib import Path
 from flask import Flask, request, render_template_string
 
@@ -13,7 +14,11 @@ app = Flask(__name__)
 
 
 def EnsureDir(path: Path) -> None:
-    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        # Log but don't crash; WriteFile will retry on first request
+        print(f"Warning: could not ensure {path}: {e}", file=sys.stderr)
 
 
 def ReadFile(path: Path) -> str:
@@ -118,6 +123,14 @@ HTML_TEMPLATE = """
 
 
 if __name__ == "__main__":
-    EnsureDir(BLOCK_PATH)
-    EnsureDir(FILE_PATH)
-    app.run(host="0.0.0.0", port=8080)
+    try:
+        print("Starting CSI demo app...", flush=True)
+        EnsureDir(BLOCK_PATH)
+        EnsureDir(FILE_PATH)
+        print("Listening on 0.0.0.0:8080", flush=True)
+        app.run(host="0.0.0.0", port=8080)
+    except Exception as e:
+        print(f"Fatal: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)

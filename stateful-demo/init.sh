@@ -62,9 +62,9 @@ echo "Log in to the registry when prompted."
 docker login "$REGISTRY_HOST"
 echo ""
 
-# Build from app dir
-echo "Building image..."
-docker build -t "$REGISTRY_IMAGE" -f "$SCRIPT_DIR/app/Dockerfile" "$SCRIPT_DIR/app"
+# Build for linux/amd64 so the image runs on typical cluster nodes (avoids exec format error on arm64 Macs)
+echo "Building image (linux/amd64)..."
+docker build --platform linux/amd64 -t "$REGISTRY_IMAGE" -f "$SCRIPT_DIR/app/Dockerfile" "$SCRIPT_DIR/app"
 echo ""
 
 echo "Pushing image..."

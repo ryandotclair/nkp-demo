@@ -19,7 +19,7 @@ spec:
       containers:
         - name: app
           image: __REGISTRY_IMAGE__
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           volumeMounts:
