@@ -9,6 +9,7 @@ spec:
   tls:
     - hosts:
         - __NAMESPACE__.sslip.nutanixdemo.com
+      secretName: tls-root-ca
   rules:
     - host: __NAMESPACE__.sslip.nutanixdemo.com
       http:
