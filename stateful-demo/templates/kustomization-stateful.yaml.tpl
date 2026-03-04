@@ -1,4 +1,4 @@
-# Stateful: app + PVCs (block + file). Use with init.sh <IP> <NAMESPACE> stateful — this is the commit audience sees.
+# Stateful: app + PVCs (block + file).
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: __NAMESPACE__

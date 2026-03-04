@@ -1,4 +1,4 @@
-# App with emptyDir — data is lost when the pod is deleted.
+# App with PVCs — data persists across pod restarts.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: nkp-10-8-53-16.sslip.nutanixdemo.com:5000/library/csi-demo-app:stateless
+          image: nkp-10-8-53-16.sslip.nutanixdemo.com:5000/library/csi-demo-app:stateful
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -28,6 +28,8 @@ spec:
               mountPath: /data/file
       volumes:
         - name: block-storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: demo-block-pvc
         - name: file-storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: demo-file-pvc

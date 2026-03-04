@@ -29,7 +29,7 @@ REGISTRY_HOST="nkp-${IP_DASHED}.sslip.nutanixdemo.com:5000"
 if [ "$MODE" = "stateless" ]; then
   REGISTRY_IMAGE="${REGISTRY_HOST}/library/csi-demo-app:stateless"
 else
-  REGISTRY_IMAGE="${REGISTRY_HOST}/library/csi-demo-app:latest"
+  REGISTRY_IMAGE="${REGISTRY_HOST}/library/csi-demo-app:stateful"
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
