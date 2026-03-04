@@ -1,9 +1,8 @@
-# Step 2: App with PVCs — data persists across pod restarts.
+# App with PVCs — data persists across pod restarts.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: csi-demo-app
-  namespace: __NAMESPACE__
   labels:
     app: csi-demo-app
 spec:

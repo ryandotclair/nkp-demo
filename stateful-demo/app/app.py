@@ -5,7 +5,7 @@ Serves a simple page to save and list content on each volume.
 import os
 import sys
 from pathlib import Path
-from flask import Flask, make_response, request, render_template_string
+from flask import Flask, make_response, redirect, request, render_template_string, url_for
 
 BLOCK_PATH = Path("/data/block")
 FILE_PATH = Path("/data/file")
@@ -36,8 +36,6 @@ def WriteFile(path: Path, content: str) -> None:
 
 @app.route("/", methods=["GET", "POST"])
 def Index():
-    blockContent = ""
-    fileContent = ""
     if request.method == "POST":
         action = request.form.get("action")
         text = request.form.get("text", "")
@@ -45,12 +43,12 @@ def Index():
             WriteFile(BLOCK_PATH, text)
         elif action == "save_file":
             WriteFile(FILE_PATH, text)
-        blockContent = ReadFile(BLOCK_PATH)
-        fileContent = ReadFile(FILE_PATH)
-    else:
-        blockContent = ReadFile(BLOCK_PATH)
-        fileContent = ReadFile(FILE_PATH)
+        # Redirect so refresh does GET only — avoids browser "Resubmit form?" re-POSTing
+        # to a new pod and making it look like data "persisted" with emptyDir
+        return redirect(url_for("Index"), code=303)
 
+    blockContent = ReadFile(BLOCK_PATH)
+    fileContent = ReadFile(FILE_PATH)
     blockExists = (BLOCK_PATH / DEMO_FILENAME).exists()
     fileExists = (FILE_PATH / DEMO_FILENAME).exists()
     podName = os.environ.get("HOSTNAME", "unknown")
@@ -100,7 +98,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
   <h1>CSI Demo — Block & File Storage</h1>
-  <p class="sub">Same app, two PVCs: one backed by block CSI, one by file CSI. Data persists across pod restarts. <strong>Pod: {{ podName }}</strong> (changes after pod delete if stateless)</p>
+  <p class="sub">Same app, two PVCs: one backed by block CSI, one by file CSI. Data persists across pod restarts. <strong>Pod: <span style="color: #fff;">{{ podName }}</span></strong> (changes after pod delete).</p>
   <div class="grid">
     <div class="card">
       <h2>Block storage (PVC)</h2>

@@ -1,9 +1,8 @@
-# Step 1: App with emptyDir — data is lost when the pod is deleted.
+# App with emptyDir — data is lost when the pod is deleted.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: csi-demo-app
-  namespace: __NAMESPACE__
   labels:
     app: csi-demo-app
 spec:

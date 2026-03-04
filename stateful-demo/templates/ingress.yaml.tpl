@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: csi-demo-app
-  namespace: __NAMESPACE__
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
