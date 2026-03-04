@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-# Init script for CSI demo: set registry and namespace, render all infra from templates, apply namespace, build/push image.
-# Usage: ./init.sh <IP> <NAMESPACE>
-# Example: ./init.sh 10.8.53.16 ryan-demo
+# Init script for CSI demo: render infra/ from templates (stateless or stateful), optionally apply namespace and build/push image.
+# Usage: ./init.sh <IP> <NAMESPACE> <stateless|stateful>
+#   stateless — setup: app with emptyDir (no PVCs). Commit this first; Flux applies; show data lost on pod delete.
+#   stateful  — demo: add PVCs and deployment using them. Commit this; audience sees the git change; Flux reconciles, data persists.
+# Example: ./init.sh 10.8.53.16 ryan-demo stateless   (then later)   ./init.sh 10.8.53.16 ryan-demo stateful
 
 set -e
 
-if [ -z "$1" ] || [ -z "$2" ]; then
-  echo "Usage: $0 <IP> <NAMESPACE>"
-  echo "Example: $0 10.8.53.16 ryan-demo"
-  echo "Registry: nkp-<IP-with-dashes>.sslip.nutanixdemo.com:5000/library"
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+  echo "Usage: $0 <IP> <NAMESPACE> <stateless|stateful>"
+  echo "  stateless — app only (emptyDir). Use for initial setup; commit and push; then run stateful for the demo."
+  echo "  stateful  — app + PVCs. Use for demo; commit and push so audience sees the git change."
+  echo "Example: $0 10.8.53.16 ryan-demo stateless"
+  exit 1
+fi
+
+MODE="$3"
+if [ "$MODE" != "stateless" ] && [ "$MODE" != "stateful" ]; then
+  echo "Mode must be 'stateless' or 'stateful'"
   exit 1
 fi
 
@@ -32,27 +41,41 @@ fi
 echo "Namespace:     $NAMESPACE"
 echo "Registry host: $REGISTRY_HOST"
 echo "Image:         $REGISTRY_IMAGE"
+echo "Mode:          $MODE"
 echo ""
 
-# Generate all infra files from templates (__NAMESPACE__ and __REGISTRY_IMAGE__)
+# Generate file from template (__NAMESPACE__ and __REGISTRY_IMAGE__)
 GenerateFromTemplate() {
   local tpl="$1"
   local dest="$2"
   sed -e "s|__NAMESPACE__|$NAMESPACE|g" -e "s|__REGISTRY_IMAGE__|$REGISTRY_IMAGE|g" "$tpl" > "$dest"
-  echo "  Generated $(basename "$dest")"
+  echo "  $(basename "$dest")"
 }
 
-echo "Generating infra from templates..."
-GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"      "$INFRA_DIR/namespace.yaml"
-GenerateFromTemplate "$TEMPLATES_DIR/pvc-block.yaml.tpl"      "$INFRA_DIR/pvc-block.yaml"
-GenerateFromTemplate "$TEMPLATES_DIR/pvc-file.yaml.tpl"      "$INFRA_DIR/pvc-file.yaml"
-GenerateFromTemplate "$TEMPLATES_DIR/deployment.yaml.tpl"    "$INFRA_DIR/deployment.yaml"
-GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"       "$INFRA_DIR/service.yaml"
-GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"      "$INFRA_DIR/ingress.yaml"
-GenerateFromTemplate "$TEMPLATES_DIR/kustomization.yaml.tpl" "$INFRA_DIR/kustomization.yaml"
+mkdir -p "$INFRA_DIR"
+
+if [ "$MODE" = "stateless" ]; then
+  echo "Generating infra/ (stateless — app only, emptyDir, no PVCs)..."
+  GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"             "$INFRA_DIR/namespace.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/deployment-step1.yaml.tpl"      "$INFRA_DIR/deployment.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"               "$INFRA_DIR/service.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"               "$INFRA_DIR/ingress.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/kustomization-stateless.yaml.tpl" "$INFRA_DIR/kustomization.yaml"
+  # Remove PVC files so they are not in the repo (audience sees them appear in the stateful commit)
+  rm -f "$INFRA_DIR/pvc-block.yaml" "$INFRA_DIR/pvc-file.yaml"
+else
+  echo "Generating infra/ (stateful — app + PVCs)..."
+  GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"             "$INFRA_DIR/namespace.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/pvc-block.yaml.tpl"            "$INFRA_DIR/pvc-block.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/pvc-file.yaml.tpl"             "$INFRA_DIR/pvc-file.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/deployment.yaml.tpl"           "$INFRA_DIR/deployment.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"               "$INFRA_DIR/service.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"               "$INFRA_DIR/ingress.yaml"
+  GenerateFromTemplate "$TEMPLATES_DIR/kustomization-stateful.yaml.tpl" "$INFRA_DIR/kustomization.yaml"
+fi
 echo ""
 
-# Apply namespace so it exists before Flux (optional, for demo: "look, namespace is there")
+# Apply namespace so it exists before Flux
 echo "Applying namespace $NAMESPACE..."
 kubectl apply -f "$INFRA_DIR/namespace.yaml"
 echo ""
@@ -71,8 +94,9 @@ echo "Pushing image..."
 docker push "$REGISTRY_IMAGE"
 echo ""
 
-echo "Done. Next steps:"
-echo "  1. git add stateful-demo/infra/"
-echo "  2. git commit -m 'Set demo app for namespace $NAMESPACE'"
-echo "  3. git push"
-echo "  Flux will reconcile and deploy the app."
+if [ "$MODE" = "stateless" ]; then
+  echo "Done (stateless). Next: commit and push stateful-demo/infra/, point Flux at stateful-demo/infra/. Show app, delete pod, data is gone."
+  echo "Then run: $0 $IP $NAMESPACE stateful   and commit/push again — that's the git change the audience sees."
+else
+  echo "Done (stateful). Commit and push stateful-demo/infra/ — audience sees the diff (PVCs + deployment update). Flux reconciles; data now persists."
+fi

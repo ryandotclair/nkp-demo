@@ -1,6 +1,7 @@
+# Stateful: app + PVCs (block + file). Use with init.sh <IP> <NAMESPACE> stateful — this is the commit audience sees.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ryan-demo
+namespace: __NAMESPACE__
 resources:
   - namespace.yaml
   - pvc-block.yaml

@@ -1,9 +1,9 @@
-# Generated from stateful-demo/templates/deployment.yaml.tpl by init.sh — do not edit by hand.
+# Step 1: App with emptyDir — data is lost when the pod is deleted.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: csi-demo-app
-  namespace: ryan-demo
+  namespace: __NAMESPACE__
   labels:
     app: csi-demo-app
 spec:
@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: nkp-10-8-53-16.sslip.nutanixdemo.com:5000/library/csi-demo-app:latest
+          image: __REGISTRY_IMAGE__
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -29,8 +29,6 @@ spec:
               mountPath: /data/file
       volumes:
         - name: block-storage
-          persistentVolumeClaim:
-            claimName: demo-block-pvc
+          emptyDir: {}
         - name: file-storage
-          persistentVolumeClaim:
-            claimName: demo-file-pvc
+          emptyDir: {}

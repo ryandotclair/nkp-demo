@@ -1,9 +1,9 @@
-# Step 2: App with PVCs — data persists across pod restarts.
+# Step 1: App with emptyDir — data is lost when the pod is deleted.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: csi-demo-app
-  namespace: __NAMESPACE__
+  namespace: ryan-demo
   labels:
     app: csi-demo-app
 spec:
@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: __REGISTRY_IMAGE__
+          image: nkp-10-8-53-16.sslip.nutanixdemo.com:5000/library/csi-demo-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -29,8 +29,6 @@ spec:
               mountPath: /data/file
       volumes:
         - name: block-storage
-          persistentVolumeClaim:
-            claimName: demo-block-pvc
+          emptyDir: {}
         - name: file-storage
-          persistentVolumeClaim:
-            claimName: demo-file-pvc
+          emptyDir: {}

@@ -1,24 +1,29 @@
 # CSI + Flux Demo (ryan-demo)
 
-Demo: self-service PVCs from StorageClasses via GitOps. One app, two volumes (block + file CSI).
+Demo: self-service PVCs from StorageClasses via GitOps. One path under `infra/`: start stateless (data lost on pod delete), then add PVCs via a second init pass — that commit is what the audience sees.
 
 ## Quick start
 
-**One-time init (per environment)**  
-From the repo root, run the init script with **IP** (Harbor/NKP UI) and **namespace**:
+**Setup (before demo)** — generate stateless app, commit, push; Flux applies; show data loss on pod delete:
 ```bash
-./stateful-demo/init.sh 10.8.53.16 ryan-demo
+./stateful-demo/init.sh 10.8.53.16 ryan-demo stateless
 ```
-Init will: generate all files in `infra/` from `templates/` (substituting `__NAMESPACE__` and `__REGISTRY_IMAGE__`), apply the namespace with `kubectl apply -f infra/namespace.yaml`, log in to Harbor, build and push the app image. Registry is `nkp-<IP-with-dashes>.sslip.nutanixdemo.com:5000/library`. Ingress host is `<namespace>.sslip.nutanixdemo.com`. Then commit `stateful-demo/infra/` and push so Flux deploys.
+Commit and push `stateful-demo/infra/`. Point Flux at `stateful-demo/infra/`. App runs with emptyDir; delete the pod and data is gone.
+
+**Demo (what audience sees)** — generate stateful app (PVCs + deployment), commit, push; Flux reconciles; data persists:
+```bash
+./stateful-demo/init.sh 10.8.53.16 ryan-demo stateful
+```
+Commit and push the changes to `stateful-demo/infra/`. The **git diff** is what you show: new PVCs and deployment updated to use them. After reconcile, delete the pod again — data is still there.
+
+Init always applies the namespace, logs in to Harbor, and builds/pushes the app image. Registry and ingress host: `nkp-<IP-dashes>.sslip.nutanixdemo.com`, `<namespace>.sslip.nutanixdemo.com`.
 
 ## Demo flow
 
-- **Before:** `watch kubectl get pvc,pods,svc -n <namespace>` → nothing (or no resources).
-- **Commit and push** the infra (and app image reference).
-- **After reconcile:** Same command shows PVCs Bound, pod Running, Service and Ingress created.
-- **Open the app URL** and use “Save to block” and “Save to file” to prove both volumes work.
-- **Backend mapping:** `kubectl describe pvc -n <namespace>` and point at `VolumeHandle` / provisioner to show how each PVC maps to storage.
+1. **Stateless (setup):** Run init with `stateless`. Commit and push `infra/`. Flux deploys app with emptyDir. Open app, add text, save. `kubectl delete pod -n <namespace> -l app=csi-demo-app` — reload app, data is gone.
+2. **Stateful (audience):** Run init with `stateful`. Commit and push — show the **git change** (new `pvc-block.yaml`, `pvc-file.yaml`, updated `deployment.yaml` and `kustomization.yaml`). Flux reconciles; PVCs provision, deployment uses them. Open app, add text, save. Delete pod again — data persists.
+3. **Backend mapping:** `kubectl describe pvc -n <namespace>` — point at VolumeHandle / provisioner.
 
-## Optional: Object CSI (second commit)
+## Optional: Object CSI (later commit)
 
-Add an Object Bucket Claim (OBC) and a deployment that uses the bucket; commit and push to show the same GitOps flow for object storage.
+Add an Object Bucket Claim and a deployment that uses the bucket; commit and push to show the same GitOps flow for object storage.
