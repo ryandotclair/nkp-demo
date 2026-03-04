@@ -3,8 +3,7 @@ kind: Ingress
 metadata:
   name: csi-demo-app
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-    traefik.ingress.kubernetes.io/router.middlewares: __NAMESPACE__-redirect-https@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   ingressClassName: kommander-traefik
   tls:
