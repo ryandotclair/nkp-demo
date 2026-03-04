@@ -52,6 +52,8 @@ GenerateFromTemplate() {
   echo "  $(basename "$dest")"
 }
 
+# Clear infra/ so switching stateless <-> stateful leaves no leftover files
+rm -rf "$INFRA_DIR"
 mkdir -p "$INFRA_DIR"
 
 if [ "$MODE" = "stateless" ]; then
@@ -61,8 +63,6 @@ if [ "$MODE" = "stateless" ]; then
   GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"               "$INFRA_DIR/service.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"               "$INFRA_DIR/ingress.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/kustomization-stateless.yaml.tpl" "$INFRA_DIR/kustomization.yaml"
-  # Remove PVC files so they are not in the repo (audience sees them appear in the stateful commit)
-  rm -f "$INFRA_DIR/pvc-block.yaml" "$INFRA_DIR/pvc-file.yaml"
 else
   echo "Generating infra/ (stateful — app + PVCs)..."
   GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"             "$INFRA_DIR/namespace.yaml"
