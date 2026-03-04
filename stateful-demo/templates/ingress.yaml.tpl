@@ -9,7 +9,8 @@ spec:
   tls:
     - hosts:
         - __NAMESPACE__.sslip.nutanixdemo.com
-      secretName: tls-root-ca
+      # Use a Secret with tls.crt + tls.key (server cert for *.sslip.nutanixdemo.com), not ca.crt
+      secretName: kommander-ingress
   rules:
     - host: __NAMESPACE__.sslip.nutanixdemo.com
       http:
