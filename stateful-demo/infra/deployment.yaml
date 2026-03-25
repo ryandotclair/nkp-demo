@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: nkp-10-8-53-16.sslip.nutanixdemo.com:5000/library/csi-demo-app:stateless
+          image: 10.38.48.51:5000/demo/csi-demo-app:stateless
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

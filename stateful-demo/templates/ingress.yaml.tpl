@@ -6,15 +6,10 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   ingressClassName: kommander-traefik
-  tls:
-    - hosts:
-        - __NAMESPACE__.sslip.nutanixdemo.com
-      secretName: kommander-ingress
   rules:
-    - host: __NAMESPACE__.sslip.nutanixdemo.com
-      http:
+    - http:
         paths:
-          - path: /
+          - path: /demo
             pathType: Prefix
             backend:
               service:

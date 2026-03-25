@@ -8,10 +8,10 @@ spec:
   ingressClassName: kommander-traefik
   tls:
     - hosts:
-        - ryan-demo.sslip.nutanixdemo.com
+        - csi-demo.sslip.nutanixdemo.com
       secretName: kommander-ingress
   rules:
-    - host: ryan-demo.sslip.nutanixdemo.com
+    - host: csi-demo.sslip.nutanixdemo.com
       http:
         paths:
           - path: /
