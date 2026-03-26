@@ -36,7 +36,7 @@ def WriteFile(path: Path, content: str) -> None:
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/<path:path>", methods=["GET", "POST"])
-def Index():
+def Index(path: str = ""):
     if request.method == "POST":
         action = request.form.get("action")
         text = request.form.get("text", "")
