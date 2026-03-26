@@ -121,7 +121,6 @@ if [ "$MODE" = "stateless" ]; then
   GenerateFromTemplate "$TEMPLATES_DIR/namespace.yaml.tpl"             "$INFRA_DIR/namespace.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/deployment-step1.yaml.tpl"      "$INFRA_DIR/deployment.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"               "$INFRA_DIR/service.yaml"
-  GenerateFromTemplate "$TEMPLATES_DIR/middleware.yaml.tpl"            "$INFRA_DIR/middleware.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"               "$INFRA_DIR/ingress.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/kustomization-stateless.yaml.tpl" "$INFRA_DIR/kustomization.yaml"
 else
@@ -131,7 +130,6 @@ else
   GenerateFromTemplate "$TEMPLATES_DIR/pvc-file.yaml.tpl"             "$INFRA_DIR/pvc-file.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/deployment.yaml.tpl"           "$INFRA_DIR/deployment.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/service.yaml.tpl"               "$INFRA_DIR/service.yaml"
-  GenerateFromTemplate "$TEMPLATES_DIR/middleware.yaml.tpl"            "$INFRA_DIR/middleware.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/ingress.yaml.tpl"               "$INFRA_DIR/ingress.yaml"
   GenerateFromTemplate "$TEMPLATES_DIR/kustomization-stateful.yaml.tpl" "$INFRA_DIR/kustomization.yaml"
 fi
