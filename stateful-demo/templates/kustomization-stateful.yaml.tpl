@@ -8,4 +8,5 @@ resources:
   - pvc-file.yaml
   - deployment.yaml
   - service.yaml
+  - middleware.yaml
   - ingress.yaml

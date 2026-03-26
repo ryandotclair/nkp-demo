@@ -4,6 +4,7 @@ metadata:
   name: csi-demo-app
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: __NAMESPACE__-demo-stripprefix@kubernetescrd
 spec:
   ingressClassName: kommander-traefik
   rules:
