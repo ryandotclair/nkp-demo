@@ -22,7 +22,7 @@ Demo: Highlights NKP GitOps feature and CSI Driver (File/Block)
 
 > Note: App runs with emptyDir (local filesystem)
 
-7. Add your new repo to the Project (CD), ensure the path is to `stateful-demo`.
+7. Add your new repo to the Project (CD), ensure the path is to `./stateful-demo`.
 
 8. Test that it works by heading to `https://<ip>/demo` in your browser, adding data to it, then run
 
@@ -40,7 +40,7 @@ Demo: Highlights NKP GitOps feature and CSI Driver (File/Block)
 ## Pro Tip
 
 - `alias forceflux='flux reconcile source git stateful-demo -n csi-driver && flux reconcile kustomization stateful-demo -n csi-driver'`
-  - This gives you a `forceflux` command that effectively forces flux to take recent git commit NOW... there's a short delay normally.
+  - This gives you a `forceflux` command that effectively forces flux to take recent git commit NOW (there's a 3 min polling cycle).
 
 ## The Demo
 
