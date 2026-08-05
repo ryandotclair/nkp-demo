@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: 10.38.48.51:5000/csi-demo-app:stateful
+          image: 10.38.48.51:5000/demo/csi-demo-app:stateful
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
