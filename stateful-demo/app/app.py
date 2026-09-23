@@ -35,7 +35,8 @@ def WriteFile(path: Path, content: str) -> None:
 
 
 @app.route("/", methods=["GET", "POST"])
-def Index():
+@app.route("/<path:path>", methods=["GET", "POST"])
+def Index(path: str = ""):
     if request.method == "POST":
         action = request.form.get("action")
         text = request.form.get("text", "")
@@ -45,7 +46,7 @@ def Index():
             WriteFile(FILE_PATH, text)
         # Redirect so refresh does GET only — avoids browser "Resubmit form?" re-POSTing
         # to a new pod and making it look like data "persisted" with emptyDir
-        return redirect(url_for("Index"), code=303)
+        return redirect(request.path, code=303)
 
     blockContent = ReadFile(BLOCK_PATH)
     fileContent = ReadFile(FILE_PATH)

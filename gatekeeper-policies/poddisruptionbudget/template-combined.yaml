@@ -1,0 +1,115 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8spoddisruptionbudget
+  annotations:
+    metadata.gatekeeper.sh/title: "Pod Disruption Budget"
+    metadata.gatekeeper.sh/version: 1.1.0
+    description: >-
+      Enforces that replica-based workloads (Deployments, StatefulSets, etc.) 
+      MUST have an associated PodDisruptionBudget deployed in their namespace, 
+      and ensures that those PDBs are safely configured (no maxUnavailable of 0, 
+      and minAvailable is less than replica count).
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sPodDisruptionBudget
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8spoddisruptionbudget
+
+        # --------------------------------------------------------
+        # VIOLATION 1: Direct PDB Check (Blocks bad PDBs directly)
+        # --------------------------------------------------------
+        violation[{"msg": msg}] {
+          input.review.kind.kind == "PodDisruptionBudget"
+          pdb := input.review.object
+
+          not valid_pdb_max_unavailable(pdb)
+          msg := sprintf(
+            "PodDisruptionBudget <%v> has maxUnavailable of 0, only positive integers are allowed for maxUnavailable",
+            [pdb.metadata.name],
+          )
+        }
+
+        # --------------------------------------------------------
+        # VIOLATION 2: Mandatory PDB Check (New!)
+        # Blocks workloads if no matching PDB exists in the namespace
+        # --------------------------------------------------------
+        violation[{"msg": msg}] {
+          obj := input.review.object
+          is_workload(obj.kind)
+          
+          not has_matching_pdb(obj)
+          msg := sprintf(
+            "%v <%v> is missing a mandatory PodDisruptionBudget. You must deploy a PDB with matching selector labels in namespace <%v>.",
+            [obj.kind, obj.metadata.name, obj.metadata.namespace]
+          )
+        }
+
+        # --------------------------------------------------------
+        # VIOLATION 3: Unsafe PDB maxUnavailable
+        # Blocks workload if its matching PDB has maxUnavailable of 0
+        # --------------------------------------------------------
+        violation[{"msg": msg}] {
+          obj := input.review.object
+          is_workload(obj.kind)
+          pdb := get_matching_pdb(obj)
+
+          not valid_pdb_max_unavailable(pdb)
+          msg := sprintf(
+            "%v <%v> has been selected by PodDisruptionBudget <%v> but has maxUnavailable of 0, only positive integers are allowed for maxUnavailable",
+            [obj.kind, obj.metadata.name, pdb.metadata.name],
+          )
+        }
+
+        # --------------------------------------------------------
+        # VIOLATION 4: Unsafe PDB minAvailable
+        # Blocks workload if its matching PDB has minAvailable >= replicas
+        # --------------------------------------------------------
+        violation[{"msg": msg}] {
+          obj := input.review.object
+          is_workload(obj.kind)
+          pdb := get_matching_pdb(obj)
+
+          not valid_pdb_min_available(obj, pdb)
+          msg := sprintf(
+            "%v <%v> has %v replica(s) but PodDisruptionBudget <%v> has minAvailable of %v, PodDisruptionBudget count should always be lower than replica(s), and not used when replica(s) is set to 1",
+            [obj.kind, obj.metadata.name, obj.spec.replicas, pdb.metadata.name, pdb.spec.minAvailable],
+          )
+        }
+
+        # --------------------------------------------------------
+        # REGO HELPERS
+        # --------------------------------------------------------
+
+        # Filters and returns a matching PDB from the namespace cache
+        get_matching_pdb(obj) = pdb {
+          pdb := data.inventory.namespace[obj.metadata.namespace]["policy/v1"].PodDisruptionBudget[_]
+          matchLabels := { [label, value] | some label; value := pdb.spec.selector.matchLabels[label] }
+          labels := { [label, value] | some label; value := obj.spec.selector.matchLabels[label] }
+          count(matchLabels - labels) == 0
+        }
+
+        # Returns true if at least one matching PDB is found in the namespace cache
+        has_matching_pdb(obj) {
+          get_matching_pdb(obj)
+        }
+
+        # Defines which resource kinds are subject to mandatory PDB rules
+        is_workload(kind) {
+          workloads := {"Deployment", "StatefulSet", "ReplicaSet", "ReplicationController"}
+          workloads[kind]
+        }
+
+        valid_pdb_min_available(obj, pdb) {
+          min_available := object.get(pdb.spec, "minAvailable", -1)
+          obj.spec.replicas > min_available
+        }
+
+        valid_pdb_max_unavailable(pdb) {
+          max_unavailable := object.get(pdb.spec, "maxUnavailable", 1)
+          max_unavailable > 0
+        }

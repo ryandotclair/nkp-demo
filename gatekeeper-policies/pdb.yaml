@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bad-pdb
+  namespace: test-app 
+spec:
+  maxUnavailable: 0 # <-- Violates Rule 1
+  selector:
+    matchLabels:
+      app: petclinic
